@@ -9,7 +9,7 @@ import sys
 
 # 添加 backend 目录到路径以支持导入 config
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import settings
+from core.config import settings
 
 # 确保数据库目录存在
 db_dir = settings.db_path.parent
@@ -40,6 +40,16 @@ def _migrate_schema():
         columns = {row[1] for row in cursor.fetchall()}
         if 'answer' not in columns:
             cursor.execute("ALTER TABLE questions ADD COLUMN answer TEXT")
+            conn.commit()
+
+        # chat_sessions 表：question_id 需要改为 nullable
+        # SQLite 不支持 ALTER COLUMN，需要重建表
+        cursor.execute("PRAGMA table_info(chat_sessions)")
+        cs_columns = {row[1]: row for row in cursor.fetchall()}
+        if 'title' not in cs_columns:
+            # 旧表结构，需要重建
+            cursor.execute("DROP TABLE IF EXISTS chat_messages")
+            cursor.execute("DROP TABLE IF EXISTS chat_sessions")
             conn.commit()
     finally:
         conn.close()

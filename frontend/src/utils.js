@@ -23,11 +23,14 @@ export const isHtml = (s) => /<\/?(?:table|tr|td|th|thead|tbody)\b/i.test(s || '
 export const ALLOWED_HTML_TAGS = [
   'table', 'tr', 'td', 'th', 'thead', 'tbody',
   'p', 'br', 'span', 'b', 'i', 'em', 'strong', 'sub', 'sup',
+  'img',
 ]
 
 /** 使用 DOMPurify 过滤 HTML，仅保留白名单标签 */
-export const sanitizeHtml = (html) =>
-  DOMPurify.sanitize(html, { ALLOWED_TAGS: ALLOWED_HTML_TAGS })
+export const sanitizeHtml = (html) => {
+  const fixed = html.replace(/src="imgs\//g, 'src="/images/')
+  return DOMPurify.sanitize(fixed, { ALLOWED_TAGS: ALLOWED_HTML_TAGS, ALLOWED_ATTR: ['src', 'alt'] })
+}
 
 /** 从题目的 content_json 中提取纯文本摘要 */
 export const getQuestionSnippet = (q, maxLen = 0, fallback = '') => {
@@ -50,9 +53,9 @@ export const renderMarkdown = (text) => {
       ...ALLOWED_HTML_TAGS,
       'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
       'ul', 'ol', 'li', 'code', 'pre', 'blockquote', 'hr',
-      'a',
+      'a', 'img',
     ],
-    ALLOWED_ATTR: ['href', 'target', 'rel'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'src', 'alt'],
   })
 }
 

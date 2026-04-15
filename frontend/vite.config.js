@@ -3,7 +3,12 @@ import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 
 // https://vite.dev/config/
-export default defineConfig(({ command }) => ({
+export default defineConfig({
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
   plugins: [
     vue(),
     // 开发模式：将 /auth 和 /app 路径重写到 app.html（SPA 入口）
@@ -12,7 +17,7 @@ export default defineConfig(({ command }) => ({
       configureServer(server) {
         server.middlewares.use((req, res, next) => {
           const url = req.url?.split('?')[0]
-          if (url === '/' || url === '/auth' || url === '/app' || url?.startsWith('/app/')) {
+          if (url === '/' || url === '/auth' || url === '/auth/login' || url === '/auth/register' || url === '/app' || url?.startsWith('/app/')) {
             req.url = '/app.html'
           }
           next()
@@ -24,6 +29,7 @@ export default defineConfig(({ command }) => ({
     environment: 'jsdom',
   },
   server: {
+    host: '127.0.0.1',
     proxy: {
       '/api': {
         target: 'http://localhost:5001',
@@ -37,10 +43,17 @@ export default defineConfig(({ command }) => ({
         target: 'http://localhost:5001',
         changeOrigin: true,
       },
+      '/erased': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
+      '/uploads': {
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+      },
     },
   },
-  // 开发模式用 /，构建时才加 /static/vue/ 前缀给 Flask 托管
-  base: command === 'build' ? '/static/vue/' : '/',
+  base: '/',
   build: {
     outDir: 'dist',
     emptyOutDir: true,
@@ -52,4 +65,4 @@ export default defineConfig(({ command }) => ({
       }
     }
   },
-}))
+})
